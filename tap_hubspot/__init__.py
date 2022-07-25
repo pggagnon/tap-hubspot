@@ -1199,6 +1199,7 @@ def do_sync(STATE, catalog):
     selected_streams = get_selected_streams(remaining_streams, ctx)
     LOGGER.info('Starting sync. Will sync these streams: %s',
                 [stream.tap_stream_id for stream in selected_streams])
+    LOGGER.info('This is the STATE: %s', STATE)
     for stream in selected_streams:
         LOGGER.info('Syncing %s', stream.tap_stream_id)
         STATE = singer.set_currently_syncing(STATE, stream.tap_stream_id)
