@@ -445,6 +445,8 @@ def gen_request(STATE, tap_stream_id, url, params, path, more_key, offset_keys, 
         while True:
             data = request(url, params).json()
 
+            LOGGER.info("data in gen_request: %s", data)
+
             if data.get(path) is None:
                 raise RuntimeError(
                     "Unexpected API response: {} not in {}".format(path, data.keys()))
@@ -458,6 +460,7 @@ def gen_request(STATE, tap_stream_id, url, params, path, more_key, offset_keys, 
                 merge_responses(data[path], transformed_v3_data)
 
             for row in data[path]:
+                LOGGER.info("row in gen_request: %s", row)
                 counter.increment()
                 yield row
 
@@ -625,6 +628,7 @@ def sync_companies(STATE, ctx):
 
     with bumble_bee:
         for row in gen_request(STATE, 'companies', url, default_company_params, 'companies', 'has-more', ['offset'], ['offset']):
+            LOGGER.info("row in sync_companies %s", row)
             row_properties = row['properties']
             modified_time = None
             if bookmark_key in row_properties:
@@ -646,6 +650,7 @@ def sync_companies(STATE, ctx):
                                  company_id=row['companyId'])).json()
                 record = bumble_bee.transform(
                     lift_properties_and_versions(record), schema, mdata)
+                LOGGER.info("record in sync_companies %s", record)
                 singer.write_record("companies", record, catalog.get(
                     'stream_alias'), time_extracted=utils.now())
                 if CONTACTS_BY_COMPANY in ctx.selected_stream_ids:
