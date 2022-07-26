@@ -519,11 +519,9 @@ def sync_contacts(STATE, ctx):
 
     url = get_url("contacts_all")
 
-    params = add_property_params_from_state(STATE, default_contact_params)
-
     vids = []
     with Transformer(UNIX_MILLISECONDS_INTEGER_DATETIME_PARSING) as bumble_bee:
-        for row in gen_request(STATE, 'contacts', url, params, 'contacts', 'has-more', ['vid-offset'], ['vidOffset']):
+        for row in gen_request(STATE, 'contacts', url, default_contact_params, 'contacts', 'has-more', ['vid-offset'], ['vidOffset']):
             modified_time = None
             if bookmark_key in row:
                 modified_time = utils.strptime_with_tz(
@@ -625,10 +623,8 @@ def sync_companies(STATE, ctx):
         singer.write_schema("contacts_by_company", contacts_by_company_schema, [
                             "company-id", "contact-id"])
 
-    params = add_property_params_from_state(STATE, default_company_params)
-
     with bumble_bee:
-        for row in gen_request(STATE, 'companies', url, params, 'companies', 'has-more', ['offset'], ['offset']):
+        for row in gen_request(STATE, 'companies', url, default_company_params, 'companies', 'has-more', ['offset'], ['offset']):
             row_properties = row['properties']
             modified_time = None
             if bookmark_key in row_properties:
@@ -715,9 +711,7 @@ def sync_deals(STATE, ctx):
                      if breadcrumb
                      and (mdata_map.get('selected') == True or has_selected_properties)
                      and any(prefix in breadcrumb[1] for prefix in V3_PREFIXES)]
-        v3_fields[0].append(add_property_params_from_state(STATE, params))
 
-    params = add_property_params_from_state(STATE, params)
     url = get_url('deals_all')
     with Transformer(UNIX_MILLISECONDS_INTEGER_DATETIME_PARSING) as bumble_bee:
         for row in gen_request(STATE, 'deals', url, params, 'deals', "hasMore", ["offset"], ["offset"], v3_fields=v3_fields):
@@ -1086,11 +1080,9 @@ def sync_contact_list_contacts(STATE, ctx):
 
     url = get_url("contact_list_contacts", list_id=list_id)
 
-    params = add_property_params_from_state(STATE, default_contact_params)
-
     vids = []
     with Transformer(UNIX_MILLISECONDS_INTEGER_DATETIME_PARSING) as bumble_bee:
-        for row in gen_request(STATE, stream_id, url, params, 'contacts', 'has-more', ['vid-offset'], ['vidOffset']):
+        for row in gen_request(STATE, stream_id, url, default_contact_params, 'contacts', 'has-more', ['vid-offset'], ['vidOffset']):
             modified_time = None
             if bookmark_key in row:
                 modified_time = utils.strptime_with_tz(
@@ -1212,6 +1204,7 @@ def do_sync(STATE, catalog):
             LOGGER.error(error_message)
             pass
 
+    LOGGER.info('This is the STATE: %s', STATE)
     STATE = singer.set_currently_syncing(STATE, None)
     singer.write_state(STATE)
     LOGGER.info("Sync completed")
